@@ -1,2 +1,0 @@
--- Add address confirmation message column to stores
-ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS address_confirmation_message TEXT DEFAULT 'Your delivery address has been saved! {address}\n\nThank you! Your seller will process your order soon.';
