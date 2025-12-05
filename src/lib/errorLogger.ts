@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import apiClient from '@/lib/apiClient';
 
 type ErrorSeverity = 'info' | 'warning' | 'error' | 'critical';
 type ErrorType = 'client_error' | 'edge_function_error' | 'webhook_error' | 'database_error' | 'api_error';
@@ -18,19 +18,15 @@ interface LogErrorOptions {
  */
 export async function logError(options: LogErrorOptions): Promise<void> {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    await fetch(
-      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/log-system-error`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(session?.access_token && { 'Authorization': `Bearer ${session.access_token}` }),
-        },
-        body: JSON.stringify(options),
-      }
-    );
+    await apiClient.post('/errors/log', {
+      errorType: options.error_type,
+      errorCode: options.error_code,
+      errorMessage: options.error_message,
+      errorStack: options.error_stack,
+      component: options.component,
+      severity: options.severity || 'error',
+      metadata: options.metadata,
+    });
   } catch (e) {
     // Silently fail - we don't want error logging to cause more errors
     console.error('Failed to log error:', e);

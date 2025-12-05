@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import apiClient from '@/lib/apiClient';
 
 export interface TrackingUserData {
   email?: string;
@@ -41,25 +41,18 @@ export const trackServerSideConversion = async (
   try {
     const { fbc, fbp } = getFacebookCookies();
     
-    const { data, error } = await supabase.functions.invoke('track-conversion', {
-      body: {
-        storeId,
-        eventName,
-        orderId,
-        userData: {
-          ...userData,
-          fbc: userData?.fbc || fbc,
-          fbp: userData?.fbp || fbp,
-          userAgent: navigator.userAgent,
-          sessionId: sessionStorage.getItem('session_id') || Date.now().toString(),
-        },
-      }
+    const { data } = await apiClient.post('/tracking/conversion', {
+      storeId,
+      eventName,
+      orderId,
+      userData: {
+        ...userData,
+        fbc: userData?.fbc || fbc,
+        fbp: userData?.fbp || fbp,
+        userAgent: navigator.userAgent,
+        sessionId: sessionStorage.getItem('session_id') || Date.now().toString(),
+      },
     });
-
-    if (error) {
-      console.error('Server-side tracking error:', error);
-      return { success: false, error };
-    }
 
     console.log('Server-side tracking successful:', data);
     return { success: true, data };
